@@ -43,6 +43,7 @@
 
 ## 最近验证
 
+- 2026-10-17（构建与使用文档）：README 补充源码下载、Windows／macOS 环境准备、锁文件安装依赖、桌面开发启动、release 构建与产物位置、应用使用及常见问题。已对照 package.json、Tauri 配置、Vite 的 Node.js 要求、前端桌面环境判断及 Tauri 官方前置条件核对；本次仅修改文档，不代表重新完成干净环境安装、桌面构建或 macOS 验证。
 - 2026-10-16（文件编辑阶段）：`npm.cmd run build` 与 `npm.cmd run tauri build -- --no-bundle` 成功；CodeMirror 按需加载，主包约 250 kB、编辑器包约 384 kB，未调高构建告警阈值。
 - 2026-10-16：`cargo test --manifest-path src-tauri/Cargo.toml --release --lib` 通过 7 项测试，覆盖 BOM／CRLF／中文保存、外部编辑拒绝与重新加载、绝对及父目录越界、过期项目、空文件、二进制、非 UTF-8、过大文件、只读文件、磁盘删除及 Windows junction 项目外链接。
 - 2026-10-16：通过本机 WebView2 调试与原生 Windows 文件夹选择器完成端到端验证：目录展开、中文路径、编辑与 Ctrl+S、标签页切换后的撤销历史、未保存取消／保存后关闭、外部冲突保留磁盘与本地内容、失败保存阻止切换项目、重新加载确认、二进制拒绝、IPC 路径越界拒绝、BOM／CRLF 保留、原生关闭窗口保护与正常退出；无前端运行时异常。读写夹具位于 D 盘项目 `.npm-cache`，未修改用户项目文件。
