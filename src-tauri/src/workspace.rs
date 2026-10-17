@@ -202,6 +202,57 @@ impl Project {
         Ok(document)
     }
 
+    fn read_image(&self, document: &str, image: &str) -> Result<Vec<u8>> {
+        let document = self.resolve(document)?;
+        if !document.is_file() {
+            return Err(FileError::new("not_file", "图片引用必须来自普通文件。"));
+        }
+        let image = Path::new(image);
+        if image.as_os_str().is_empty()
+            || image
+                .components()
+                .any(|part| matches!(part, Component::Prefix(_) | Component::RootDir))
+        {
+            return Err(FileError::new(
+                "outside_project",
+                "仅支持项目内的相对路径图片。",
+            ));
+        }
+        let mut relative = document
+            .parent()
+            .unwrap()
+            .strip_prefix(&self.root)
+            .unwrap()
+            .to_path_buf();
+        for part in image.components() {
+            match part {
+                Component::Normal(name) => relative.push(name),
+                Component::ParentDir if relative.pop() => {}
+                Component::CurDir => {}
+                _ => {
+                    return Err(FileError::new(
+                        "outside_project",
+                        "图片路径不能越出项目文件夹。",
+                    ))
+                }
+            }
+        }
+        let canonical = self.resolve(&relative.to_string_lossy())?;
+        let bytes = read_bounded(&canonical)?;
+        if !(bytes.starts_with(b"\x89PNG\r\n\x1a\n")
+            || bytes.starts_with(b"\xff\xd8\xff")
+            || bytes.starts_with(b"GIF87a")
+            || bytes.starts_with(b"GIF89a")
+            || (bytes.starts_with(b"RIFF") && bytes.get(8..12) == Some(b"WEBP")))
+        {
+            return Err(FileError::new(
+                "image_format",
+                "仅支持 PNG、JPEG、GIF 和 WebP 图片。",
+            ));
+        }
+        Ok(bytes)
+    }
+
     fn save(&mut self, relative: &str, content: String) -> Result<()> {
         let canonical = self.resolve(relative)?;
         let snapshot = self
@@ -398,6 +449,19 @@ pub async fn read_document(
 }
 
 #[tauri::command]
+pub async fn read_markdown_image(
+    state: State<'_, Workspace>,
+    project_id: u64,
+    path: String,
+    image_path: String,
+) -> Result<Vec<u8>> {
+    state
+        .lock()?
+        .project(project_id)?
+        .read_image(&path, &image_path)
+}
+
+#[tauri::command]
 pub async fn save_document(
     state: State<'_, Workspace>,
     project_id: u64,
@@ -453,6 +517,53 @@ mod tests {
         fn drop(&mut self) {
             let _ = fs::remove_dir_all(&self.0);
         }
+    }
+
+    #[test]
+    fn markdown_images_resolve_within_project_and_reject_unsafe_inputs() {
+        let fixture = Fixture::new();
+        fs::create_dir(fixture.0.join("docs")).unwrap();
+        fixture.write("docs/note.md", "# note");
+        fixture.write("图片.png", b"\x89PNG\r\n\x1a\n");
+        fixture.write("fake.png", "<svg onload='alert(1)'/>");
+        fixture.write("large.png", vec![0; MAX_TEXT_BYTES + 1]);
+        let project = fixture.project();
+        assert_eq!(
+            project.read_image("docs/note.md", "../图片.png").unwrap(),
+            b"\x89PNG\r\n\x1a\n"
+        );
+        for path in ["../../outside.png", "/outside.png", ""] {
+            assert_eq!(
+                project.read_image("docs/note.md", path).unwrap_err().code,
+                "outside_project"
+            );
+        }
+        assert_eq!(
+            project
+                .read_image("docs/note.md", "../fake.png")
+                .unwrap_err()
+                .code,
+            "image_format"
+        );
+        assert_eq!(
+            project
+                .read_image("docs/note.md", "../large.png")
+                .unwrap_err()
+                .code,
+            "too_large"
+        );
+        assert!(project.read_image("docs/note.md", "missing.png").is_err());
+        assert_eq!(
+            project.read_image(".", "图片.png").unwrap_err().code,
+            "not_file"
+        );
+        assert_eq!(
+            project
+                .read_image("../note.md", "图片.png")
+                .unwrap_err()
+                .code,
+            "outside_project"
+        );
     }
 
     #[test]
@@ -622,9 +733,14 @@ mod tests {
         let mut project = fixture.project();
         let tree = project.list("").unwrap();
         let error = project.read_document("link/private.txt").err().unwrap();
+        fixture.write("note.md", "# image");
+        let image_error = project
+            .read_image("note.md", "link/private.txt")
+            .unwrap_err();
         fs::remove_dir(&junction).unwrap();
         assert!(tree.is_empty());
         assert_eq!(error.code, "outside_project");
+        assert_eq!(image_error.code, "outside_project");
         assert_eq!(
             fs::read_to_string(outside.0.join("private.txt")).unwrap(),
             "outside"

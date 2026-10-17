@@ -9,6 +9,8 @@ import {
 
 type Theme = 'system' | 'light' | 'dark';
 const TextEditor = lazy(() => import('./components/TextEditor'));
+const MarkdownPreview = lazy(() => import('./components/MarkdownPreview'));
+type MarkdownMode = 'edit' | 'preview' | 'split';
 type Panel = 'files' | 'git';
 type PendingAction = { kind: 'tab' | 'reload'; path: string } | { kind: 'project' | 'window' };
 
@@ -25,6 +27,7 @@ function initialTheme(): Theme {
 export default function App() {
   const [theme, setTheme] = useState<Theme>(initialTheme);
   const [panel, setPanel] = useState<Panel>('files');
+  const [markdownMode, setMarkdownMode] = useState<MarkdownMode>('split');
   const [project, setProject] = useState<ProjectInfo | null>(null);
   const [documents, setDocuments] = useState<OpenDocument[]>([]);
   const [activePath, setActivePath] = useState<string | null>(null);
@@ -39,6 +42,7 @@ export default function App() {
   const confirmDialog = useRef<HTMLDialogElement>(null);
   const requestCloseRef = useRef<() => void>(() => {});
   const activeDocument = documents.find(document => document.path === activePath);
+  const isMarkdown = /\.(md|markdown)$/i.test(activeDocument?.path || '');
 
   projectRef.current = project;
   activePathRef.current = activePath;
@@ -279,13 +283,19 @@ export default function App() {
           </div>}
           {activeDocument ? <>
             <div className="editor-toolbar"><span className="truncate" title={activeDocument.path}>{activeDocument.path}</span>
+              {isMarkdown && <div className="markdown-modes" role="group" aria-label="Markdown 显示模式">
+                {([['edit', '编辑'], ['preview', '预览'], ['split', '分屏']] as const).map(([mode, label]) => <button key={mode} className="secondary-button" aria-pressed={markdownMode === mode} onClick={() => setMarkdownMode(mode)}>{label}</button>)}
+              </div>}
               <button className="primary-button" title="保存（Ctrl／⌘ + S）" disabled={busy || activeDocument.saving || !isDirty(activeDocument)} onClick={() => void saveOne(activeDocument.path).catch(() => {})}>{activeDocument.saving ? '保存中…' : '保存'}</button>
             </div>
             {activeDocument.diskStatus && <div className="external-change" role="alert">
               <span>{activeDocument.diskStatus === 'missing' ? '磁盘文件已被删除或移动。' : activeDocument.diskStatus === 'unreadable' ? '磁盘文件无法读取，请检查文件及权限。' : '磁盘文件已被其他程序修改。'}{isDirty(activeDocument) ? '本地修改仍保留，请处理冲突后保存。' : '请重新加载最新内容。'}</span>
               <button className="text-button" disabled={busy || activeDocument.diskStatus === 'missing'} onClick={() => void requestAction({ kind: 'reload', path: activeDocument.path })}>重新加载</button>
             </div>}
-            <Suspense fallback={<p className="tree-hint">正在加载编辑器…</p>}><TextEditor document={activeDocument} openPaths={documents.map(document => document.path)} onChange={(path, content) => updateDocuments(current => current.map(document => document.path === path ? { ...document, content } : document))} /></Suspense>
+            <div className={`document-panes ${isMarkdown ? markdownMode : 'edit'}`}>
+              <div className="source-pane"><Suspense fallback={<p className="tree-hint">正在加载编辑器…</p>}><TextEditor document={activeDocument} openPaths={documents.map(document => document.path)} onChange={(path, content) => updateDocuments(current => current.map(document => document.path === path ? { ...document, content } : document))} /></Suspense></div>
+              {isMarkdown && markdownMode !== 'edit' && project && <Suspense fallback={<p className="tree-hint">正在加载预览…</p>}><MarkdownPreview key={`${project.id}:${activeDocument.path}`} projectId={project.id} path={activeDocument.path} content={activeDocument.content} /></Suspense>}
+            </div>
           </> : <>
           <div className="panel-heading">{project ? project.name : '欢迎使用'}</div>
           <div className="welcome">
@@ -298,7 +308,7 @@ export default function App() {
                 <div><span>02</span><p>Markdown<small>源码编辑、预览与分屏阅读</small></p></div>
                 <div><span>03</span><p>Git Diff<small>只读查看工作区与暂存区差异</small></p></div>
               </div>
-              <p className="stage-note mt-10">{project ? '从左侧选择文本文件开始编辑，使用 Ctrl／⌘ + S 保存。' : isTauri() ? '打开本地文件夹，开始编辑 UTF-8 文本。Markdown 预览与 Git Diff 将在后续阶段接入。' : '请启动 Diffora 桌面程序以访问本地文件。'}</p>
+              <p className="stage-note mt-10">{project ? '从左侧选择文本文件开始编辑，使用 Ctrl／⌘ + S 保存。' : isTauri() ? '打开本地文件夹，开始编辑 UTF-8 文本或预览 Markdown。Git Diff 将在后续阶段接入。' : '请启动 Diffora 桌面程序以访问本地文件。'}</p>
             </div>
           </div>
           </>}

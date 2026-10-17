@@ -11,6 +11,7 @@ pub fn run() {
             workspace::save_document,
             workspace::check_documents,
             workspace::close_document,
+            workspace::read_markdown_image,
         ])
         .run(tauri::generate_context!())
         .expect("failed to run Diffora");

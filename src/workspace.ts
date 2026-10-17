@@ -47,5 +47,7 @@ export const checkDocuments = (projectId: number) =>
   invoke<{ path: string; status: DiskStatus }[]>('check_documents', { projectId });
 export const closeDocument = (projectId: number, path: string) =>
   invoke<void>('close_document', { projectId, path });
+export const readMarkdownImage = (projectId: number, path: string, imagePath: string) =>
+  invoke<number[]>('read_markdown_image', { projectId, path, imagePath });
 export const fileName = (path: string) => path.split(/[\\/]/).pop() || path;
 export const isDirty = (document: OpenDocument) => document.content !== document.savedContent;

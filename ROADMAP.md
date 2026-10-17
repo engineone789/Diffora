@@ -2,10 +2,13 @@
 
 ## 当前阶段
 
-阶段 ３文件树、标签页、UTF-8 文本编辑与保存闭环已完成，并通过 Windows 桌面端到端验证。下一阶段为 Markdown 预览，尚未开始。
+阶段 ４ Markdown 编辑、实时预览、分屏及项目内相对路径图片已完成，并通过 Windows 桌面验证；文件编辑原有流程回归通过。下一阶段为只读 Git 状态与 Diff，尚未开始。macOS 构建与交互仍待验证。
 
 ## 已完成
 
+- Markdown 文件支持编辑／预览／分屏，预览跟随未保存内容更新，保留模式切换后的撤销历史；宽窗口左右分屏，窄窗口上下排列，适配深浅主题。
+- 使用项目级 react-markdown 与 remark-gfm 支持标题、列表、引用、代码块、表格、任务列表及删除线；忽略原始 HTML，链接暂仅展示，不执行跳转。
+- Rust 图片接口支持 Markdown 相对目录中的 PNG／JPEG／GIF／WebP，单张不超过 2 MiB；支持项目内父目录引用和中文路径，拒绝绝对路径、项目越界、外部目录链接和非图片内容。外部图片及 SVG 暂不支持。
 - 原生选择项目文件夹、按需展开与刷新文件树、中文路径文件打开、CodeMirror 6 多标签页编辑与撤销历史保留。
 - 保存按钮与 Ctrl／Cmd + S、未保存标记、UTF-8 BOM 与 LF／CRLF 保存；关闭标签页、切换项目、关闭窗口时提供保存／放弃／取消，保存失败阻止继续。
 - 窗口重新获得焦点或恢复可见时检查外部变更，保存前再次比较磁盘内容；冲突时拒绝覆盖，保留本地修改，重新加载前确认放弃未保存内容。
@@ -25,11 +28,10 @@
 
 ## 进行中
 
-- 无。文件编辑阶段已验收，Markdown 与 Git 功能待后续实施。
+- 无。Markdown 阶段已完成 Windows 验证，只读 Git 功能待后续实施。
 
 ## 待办
 
-- Markdown 编辑、预览、分屏及相对路径图片。
 - 本机 Git 状态、工作区 Diff、暂存区 Diff。
 - Windows 与 macOS 核心流程及打包验证。
 
@@ -39,10 +41,14 @@
 - Rust/Cargo 的用户级环境变量已改为 D 盘路径；本次验证从持久化用户环境刷新进程后运行。迁移前打开的 Codex 和终端需要重启以加载新环境；桌面会话自动继承情况待用户实际验证。
 - 官方安装器保留共享路径 `C:\Program Files (x86)\Microsoft Visual Studio\Shared`（约 7 MiB）及 Windows SDK 路径 `C:\Program Files (x86)\Windows Kits\10`（约 1.67 GiB）；未强制搬移系统组件，安装器自身仍在 C 盘。
 - macOS 构建需在 Mac 上验证。
+- Markdown 当前不提供代码语法高亮、链接点击跳转及远程图片；macOS Markdown 交互尚未验证。
 - 文件编辑阶段暂限 2 MiB 以内的 UTF-8 文本；目录链接不展示，混合换行在保存时统一为 CRLF。macOS 文件选择、快捷键与退出保护尚未实际验证。
 
 ## 最近验证
 
+- 2026-10-17（Markdown 阶段）：`npm.cmd run build`、`npm.cmd run tauri build -- --no-bundle` 通过，Markdown 预览按需加载，新增包约 156 kB；`cargo test --manifest-path src-tauri/Cargo.toml --release --lib` 通过 8 项测试，新增图片父目录引用、中文路径、目录输入、路径越界、格式、大小、缺失文件及 Windows junction 图片访问验证。
+- 2026-10-17：真实 Windows WebView2 与原生文件夹选择器验证 Markdown 标题、表格、任务列表、代码块、中文及 URL 编码图片显示、越界拒绝、原始 HTML 与恶意链接阻止、未保存内容实时预览、编辑／预览／分屏切换、撤销历史、标签页切换及保存；无前端运行时异常。已目视检查 1200×800 深色左右分屏和 720×540 浅色上下分屏截图，未出现页面水平溢出。
+- 2026-10-17：原有文件编辑桌面回归通过，覆盖中文路径、Ctrl+S、多标签撤销、未保存确认、外部冲突、保存失败阻止项目切换、重新加载、二进制拒绝、IPC 项目边界、BOM／CRLF 及原生关闭保护。临时脚本、截图和夹具均位于已忽略的 `.npm-cache/`；README 已同步功能和限制，未执行安装包打包、发布或 macOS 验证。
 - 2026-10-17（构建与使用文档）：README 补充源码下载、Windows／macOS 环境准备、锁文件安装依赖、桌面开发启动、release 构建与产物位置、应用使用及常见问题。已对照 package.json、Tauri 配置、Vite 的 Node.js 要求、前端桌面环境判断及 Tauri 官方前置条件核对；本次仅修改文档，不代表重新完成干净环境安装、桌面构建或 macOS 验证。
 - 2026-10-16（文件编辑阶段）：`npm.cmd run build` 与 `npm.cmd run tauri build -- --no-bundle` 成功；CodeMirror 按需加载，主包约 250 kB、编辑器包约 384 kB，未调高构建告警阈值。
 - 2026-10-16：`cargo test --manifest-path src-tauri/Cargo.toml --release --lib` 通过 7 项测试，覆盖 BOM／CRLF／中文保存、外部编辑拒绝与重新加载、绝对及父目录越界、过期项目、空文件、二进制、非 UTF-8、过大文件、只读文件、磁盘删除及 Windows junction 项目外链接。
