@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+:root {
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  color-scheme: light;
+  --background: #fbfcfc;
+  --surface: #f1f4f3;
+  --text: #253831;
+  --muted: #6a7b74;
+  --border: #dde5e0;
+  --accent: #286b51;
+  --highlight: #e0eee6;
+  color: var(--text);
+  background: var(--background);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #161c19;
+  --surface: #1c2420;
+  --text: #dce7df;
+  --muted: #93a59a;
+  --border: #303d35;
+  --accent: #9bd8ae;
+  --highlight: #293e30;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 640px; }
+button, select { font: inherit; }
+button { cursor: pointer; }
+button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.app-shell { display: grid; grid-template-rows: 56px minmax(0, 1fr) 28px; height: 100dvh; }
+.app-header, .status-bar { background: var(--surface); }
+.app-header { border-bottom: 1px solid var(--border); }
+.brand-mark { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; color: var(--background); background: var(--accent); font-size: 17px; font-weight: 700; }
+.header-caption { font-size: 12px; color: var(--muted); margin-left: 12px; }
+select { background: var(--background); border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; color: var(--text); }
+.workspace { display: grid; grid-template-columns: 52px 238px minmax(0, 1fr); min-height: 0; }
+.activity-bar, .sidebar { background: var(--surface); border-right: 1px solid var(--border); }
+.activity-button { width: 36px; height: 36px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); padding: 8px; }
+.activity-button:hover, .activity-button[aria-pressed="true"] { background: var(--highlight); color: var(--accent); }
+.activity-button svg { width: 20px; height: 20px; }
+.sidebar, .editor-area { min-height: 0; overflow: auto; }
+.editor-area { display: flex; flex-direction: column; }
+.panel-heading { flex-shrink: 0; height: 40px; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+.welcome { flex: 1; padding: 52px 48px; display: flex; align-items: center; justify-content: center; }
+.welcome-content { width: 100%; max-width: 620px; }
+.eyebrow { color: var(--accent); font-size: 11px; letter-spacing: 2px; }
+h1 { font-size: clamp(28px, 3.5vw, 46px); line-height: 1.4; margin-top: 18px; font-weight: 600; letter-spacing: -1px; }
+.muted { color: var(--muted); }
+.feature-list { display: grid; gap: 20px; }
+.feature-list > div { display: flex; gap: 18px; align-items: baseline; }
+.feature-list > div > span { font-family: monospace; color: var(--accent); font-size: 11px; }
+.feature-list p { font-size: 14px; }
+.feature-list small { display: block; color: var(--muted); margin-top: 5px; font-size: 12px; }
+.stage-note { border-top: 1px solid var(--border); padding-top: 16px; font-size: 12px; color: var(--muted); line-height: 1.8; }
+.status-bar { border-top: 1px solid var(--border); }
+.header-actions { display: flex; align-items: center; gap: 18px; }
+.primary-button, .secondary-button { border-radius: 6px; padding: 6px 12px; font-size: 12px; white-space: nowrap; border: 1px solid var(--accent); }
+.primary-button { background: var(--accent); color: var(--background); }
+.secondary-button { background: var(--background); color: var(--text); border-color: var(--border); }
+button:disabled { cursor: default; opacity: .5; }
+.text-button { padding: 2px 5px; border: 0; background: transparent; color: var(--accent); font-size: 12px; white-space: nowrap; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.tree-project { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px; font-size: 12px; font-weight: 600; }
+.file-tree ul { list-style: none; margin: 0; padding: 0; }
+.tree-entry { display: flex; align-items: center; gap: 6px; width: 100%; padding: 5px 12px; text-align: left; font-size: 12px; color: var(--text); border: 0; background: transparent; }
+.tree-entry:hover, .tree-entry.selected { background: var(--highlight); }
+.tree-icon { flex: 0 0 12px; text-align: center; color: var(--muted); }
+.tree-hint { padding: 8px 20px; color: var(--muted); font-size: 12px; }
+.tree-hint button { background: transparent; border: 0; color: var(--accent); }
+.notice, .external-change { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 14px; font-size: 12px; line-height: 1.7; background: var(--highlight); border-bottom: 1px solid var(--border); }
+.tab-bar { display: flex; flex-shrink: 0; min-height: 39px; overflow-x: auto; background: var(--surface); border-bottom: 1px solid var(--border); }
+.file-tab { display: flex; align-items: center; flex-shrink: 0; border-right: 1px solid var(--border); border-top: 2px solid transparent; }
+.file-tab.active { background: var(--background); border-top-color: var(--accent); }
+.file-tab button { color: var(--muted); border: 0; background: transparent; font-size: 12px; }
+.file-tab.active button { color: var(--text); }
+.file-tab [role="tab"] { padding: 10px 8px 10px 14px; white-space: nowrap; }
+.file-tab .tab-close { padding: 4px 8px; margin-right: 4px; border-radius: 4px; }
+.tab-close:hover { background: var(--highlight); }
+.dirty-mark { margin-left: 8px; color: var(--accent); font-size: 9px; }
+.editor-toolbar { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 16px; min-height: 43px; color: var(--muted); font-size: 12px; border-bottom: 1px solid var(--border); }
+.text-editor { flex: 1; min-height: 0; overflow: hidden; }
+.status-detail { flex-shrink: 0; margin-left: 16px; }
+.confirm-dialog { width: min(500px, calc(100vw - 48px)); margin: auto; padding: 24px; color: var(--text); background: var(--background); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 18px 60px #0004; }
+.confirm-dialog::backdrop { background: #0007; }
+.confirm-dialog h2 { margin: 0 0 12px; font-size: 18px; font-weight: 600; }
+.confirm-dialog p, .confirm-dialog li { font-size: 13px; line-height: 1.8; overflow-wrap: anywhere; }
+.confirm-dialog ul { max-height: 180px; overflow: auto; margin: 12px 0; padding-left: 20px; }
+.dialog-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+.dialog-notice { color: var(--accent); margin-top: 12px; }
+@media (max-width: 850px) {
+  .workspace { grid-template-columns: 48px 190px minmax(0, 1fr); }
+  .welcome { padding: 32px 24px; }
+  .header-caption { display: none; }
+}

@@ -1,0 +1,13 @@
+node_modules/
+dist/
+target/
+.npm-cache/
+.env*
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.codex/
+.agents/
+*.local
+src-tauri/gen/
